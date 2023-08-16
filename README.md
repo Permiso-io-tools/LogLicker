@@ -1,6 +1,11 @@
 # LogLicker
 Tool for obfuscating and deobfuscating data. This tool is built to be highly customizable, so while it does have in-built support for AWS CloudTrail logs, support for other data types can be added. This is because this tool searches and replaces sensitive data based on regexes pulled from an inputted file.
 
+## Required Packages
+>```bash
+>python3 -m pip install regex boto3 exrex
+>```
+
 ## Input
 
 This tool offers a CLI (Command Line Interface). As such, here we review its use:
@@ -45,13 +50,13 @@ Inbuilt support for the CloudTrail API to pull logs directly from CloudTrail.
 >.--eventid, --eventname, --readonly, --username, --resourcetype, --resourcename, --eventsource, --accesskeyid
 >- These are the mutually exclusive arguments for grabbing CloudTrail logs (only one can be used at a time). Logs that do not fit the argument provided are not retrieved from CloudTrail. https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudtrail/client/lookup_events.html
 >```PowerShell
->python3 RunLogLicker.py --readonly true
+>python3 RunLogLicker.py cloudtrail --readonly true
 >```
 >-----
->--starttime, --endtime, --eventcategory
+>--starttime, --endtime
 >-  These are the non-mutually exclusive arguments for grabbing CloudTrail logs, which means as many of these can be added as wanted. An example call using these looks like:
 >```PowerShell
->python3 RunLogLicker.py cloudtrail --starttime 07132023 --endtime 07152023 --eventcategory management
+>python3 RunLogLicker.py cloudtrail --starttime 07132023 --endtime 07152023 
 >```
 ### rawtext - Subparser
 
@@ -65,8 +70,11 @@ Pull from a text file.
 >python3 RunLogLicker.py rawtext --ifp input/example/file.txt
 >```
 >-----
->--deanonymize
->- Whether or not to deobfustcate data.
+>--deanonymize or -da (true)
+>- Whether or not to deobfustcate data. (Requires input that needs de-anonymized and the manifest that says how to de-anonymize.)
+>```PowerShell
+>python3 RunLogLicker.py rawtext --inputfilepath input/example/file.txt -imfp output/manifest.json -da true
+>```
 
 ### rawtext & cloudtrail arguments
 
@@ -141,6 +149,10 @@ python3 RunLogLicker.py cloudtrail -ofp output/anonymizedcloudtrail.txt -imfp ou
 ## Example Call Chain
 #### The following example was chosen to take a raw cloudtrail log, anonymize it and get the manifest, use both to reverse back to de-anonymized version.
 ```PowerShell
+----------
+Get non-anonymized raw cloudtrail data.
+----------
+
 python3 RunLogLicker.py rawcloudtrail
 
   88      dP.Yb   dPEEb8 88     88  dPTTb8 77  dP 867888 88<>Yb
@@ -153,8 +165,11 @@ python3 RunLogLicker.py rawcloudtrail
 [*] Processing.
 [*] Fetching data.
 [*] Completed. - 5bf42d01fbe2bb83df9ed5b8597fc48e
+
 ----------
+Anonymize the raw cloudtrail data.
 ----------
+
 python3 RunLogLicker.py rawtext -ifp /Users/UserA/Repos/LogLicker/output/rawCTOutput-5bf42d01fbe2bb83df9ed5b8597fc48e.json
 
   88      dP.Yb   dPEEb8 88     88  dPTTb8 77  dP 867888 88<>Yb
@@ -167,8 +182,11 @@ python3 RunLogLicker.py rawtext -ifp /Users/UserA/Repos/LogLicker/output/rawCTOu
 [*] Processing.
 [*] Anonymizing - Writing to output & manifest.
 [*] Completed. - f146979ecec0448282f24803c93bafdd
+
 ----------
+Use anonymized data file and manifest to search the anonymized data and replace with orginals.
 ----------
+
 python3 RunLogLicker.py rawtext -ifp /Users/UserA/Repos/LogLicker/output/anonymizedRawtext-f146979ecec0448282f24803c93bafdd.json -imfp /Users/UserA/Repos/LogLicker/output/manifest-f146979ecec0448282f24803c93bafdd.json -da true
 
   88      dP.Yb   dPEEb8 88     88  dPTTb8 77  dP 867888 88<>Yb
